@@ -65,10 +65,11 @@ class RestAPI:
         return self._event['requestContext']['stage']
 
     def _debugging_response_data(self):
-        self.log.debug('Context repr: {}'.format(repr(self._context)))
-        self.log.debug('Context dir: {}'.format(dir(self._context)))
+        context_vars = vars(self._context)
+        del context_vars['identity']
         return {
             'event': self._event,
+            'context': context_vars,
             'method': self.method,
             'route': self.route,
             'stage': self.stage,
