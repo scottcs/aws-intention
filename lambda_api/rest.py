@@ -1,5 +1,6 @@
 """aws_intention - rest_api"""
 import json
+import logging
 
 
 class RestAPI:
@@ -14,6 +15,9 @@ class RestAPI:
         self._event = event
         self._context = context
         self._body = {}
+        self.log = logging.getLogger('RestAPI')
+        if self.debug:
+            self.log.setLevel(logging.DEBUG)
 
     @property
     def debug(self):
@@ -41,7 +45,7 @@ class RestAPI:
         if not self._body:
             try:
                 self._body = json.loads(self._event['body'])
-            except (KeyError, ValueError):
+            except (KeyError, TypeError):
                 pass
         return self._body
 
@@ -61,9 +65,10 @@ class RestAPI:
         return self._event['requestContext']['stage']
 
     def _debugging_response_data(self):
+        self.log.debug('Context repr: {}'.format(repr(self._context)))
+        self.log.debug('Context dir: {}'.format(dir(self._context)))
         return {
             'event': self._event,
-            'context': self._context,
             'method': self.method,
             'route': self.route,
             'stage': self.stage,
@@ -84,6 +89,18 @@ class RestAPI:
             'body': json.dumps(body)
         }
         return response
+
+    def _post(self):
+        self.log.warning('POST not implemented... returning GET')
+        return self._get()
+
+    def _put(self):
+        self.log.warning('PUT not implemented... returning GET')
+        return self._get()
+
+    def _delete(self):
+        self.log.warning('DELETE not implemented... returning GET')
+        return self._get()
 
     def invoke(self):
         """Parse the lambda_api event and invoke the correct method.
