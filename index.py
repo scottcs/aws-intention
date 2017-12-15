@@ -1,5 +1,5 @@
 """Handler for base API route."""
-from lambda_api.rest import RestAPI
+from lambda_api.root import RootAPI
 
 
 def handler(event, context):
@@ -9,4 +9,4 @@ def handler(event, context):
     :param context: Lambda context
     :return: Response dict
     """
-    return RestAPI(event, context).invoke()
+    return RootAPI(event, context).invoke()
