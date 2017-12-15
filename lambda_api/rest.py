@@ -23,7 +23,15 @@ HTTP_METHODS = (
 
 
 class RestAPI:
-    """HTTP REST API handler"""
+    """HTTP REST API handler.
+
+    Subclass this class and implement _method() methods for each HTTP METHOD you want to support.
+
+    `_options()` is already provided for you.
+
+    For example, to support GET and POST, implement `_get()` and `_post()`, typically
+    by returning `self._respond()`.
+    """
 
     def __init__(self, event, context):
         """Entry point from Lambda invocation.
@@ -109,12 +117,6 @@ class RestAPI:
             'body': json.dumps(body),
             'headers': headers,
         }
-
-    def _get(self):
-        return self._respond('GET invoked')
-
-    def _post(self):
-        return self._respond('POST invoked')
 
     def _options(self):
         self.log.debug('OPTIONS invoked')
