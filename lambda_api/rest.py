@@ -68,8 +68,8 @@ class RestAPI:
         context_vars = vars(self._context)
         del context_vars['identity']
         return {
-            'event': self._event,
-            'context': context_vars,
+            'input_event': self._event,
+            'input_context': context_vars,
             'method': self.method,
             'route': self.route,
             'stage': self.stage,
@@ -79,38 +79,29 @@ class RestAPI:
             'body_is_base64': self.body_is_base64,
         }
 
-    def _get(self):
-        body = {
-            'message': 'GET invoked',
-        }
+    def _respond(self, message, body=None, status=200):
+        body = body or {}
+        body['message'] = message
         if self.debug:
             body.update(self._debugging_response_data())
-        response = {
-            'statusCode': 200,
-            'body': json.dumps(body)
+        return {
+            'statusCode': status,
+            'body': json.dumps(body),
         }
-        return response
+
+    def _get(self):
+        return self._respond('GET invoked')
 
     def _post(self):
-        self.log.warning('POST not implemented... returning GET')
-        return self._get()
-
-    def _put(self):
-        self.log.warning('PUT not implemented... returning GET')
-        return self._get()
-
-    def _delete(self):
-        self.log.warning('DELETE not implemented... returning GET')
-        return self._get()
+        return self._respond('POST invoked')
 
     def invoke(self):
         """Parse the lambda_api event and invoke the correct method.
 
         :return: HTTP Response
         """
-        return getattr(self, {
-            'GET': '_get',
-            'POST': '_post',
-            'PUT': '_put',
-            'DELETE': '_delete',
-        }[self.method])()
+        # TODO: OPTIONS
+        method = getattr(self, '_{}'.format(self.method.lower()), None)
+        if method:
+            return method()
+        return self._respond('{} is not implemented'.format(self.method), status=400)
