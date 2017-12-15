@@ -3,6 +3,25 @@ import json
 import logging
 
 
+HTTP_METHODS = (
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'COPY',
+    'HEAD',
+    'OPTIONS',
+    'LINK',
+    'UNLINK',
+    'PURGE',
+    'LOCK',
+    'UNLOCK',
+    'PROPFIND',
+    'VIEW',
+)
+
+
 class RestAPI:
     """HTTP REST API handler"""
 
@@ -79,7 +98,8 @@ class RestAPI:
             'body_is_base64': self.body_is_base64,
         }
 
-    def _respond(self, message, body=None, status=200):
+    def _respond(self, message, body=None, headers=None, status=200):
+        headers = headers or {}
         body = body or {}
         body['message'] = message
         if self.debug:
@@ -87,6 +107,7 @@ class RestAPI:
         return {
             'statusCode': status,
             'body': json.dumps(body),
+            'headers': headers,
         }
 
     def _get(self):
@@ -95,13 +116,27 @@ class RestAPI:
     def _post(self):
         return self._respond('POST invoked')
 
+    def _options(self):
+        self.log.debug('OPTIONS invoked')
+        options = []
+        for method in HTTP_METHODS:
+            if hasattr(self, '_{}'.format(method.lower())):
+                options.append(method)
+        headers = {}
+        if options:
+            opt_str = ', '.join(options)
+            headers = {
+                'Allow': opt_str,
+                'Access-Control-Allow-Methods': opt_str,
+            }
+        return self._respond('OPTIONS invoked', headers=headers)
+
     def invoke(self):
         """Parse the lambda_api event and invoke the correct method.
 
         :return: HTTP Response
         """
-        # TODO: OPTIONS
         method = getattr(self, '_{}'.format(self.method.lower()), None)
         if method:
             return method()
-        return self._respond('{} is not implemented'.format(self.method), status=400)
+        return self._respond('{} is not implemented'.format(self.method), status=501)
