@@ -129,9 +129,10 @@ class RestAPI:
             opt_str = ', '.join(options)
             headers = {
                 'Allow': opt_str,
-                'Access-Control-Allow-Methods': opt_str,
             }
-        return self._respond('OPTIONS invoked', headers=headers)
+        else:
+            opt_str = 'None'
+        return self._respond('OPTIONS: {}'.format(opt_str), headers=headers)
 
     def invoke(self):
         """Parse the lambda_api event and invoke the correct method.
