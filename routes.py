@@ -1,16 +1,16 @@
 """Handler for base API route."""
-from lambda_api.root import RootAPI
-from lambda_api.values import ValuesAPI
+from api_v1.users import UsersAPI
+from api_v1.values import ValuesAPI
 
 
-def root(event, context):
-    """Root API handler.
+def users(event, context):
+    """Users API handler.
 
     :param event: Lambda event
     :param context: Lambda context
     :return: Response dict
     """
-    return RootAPI(event, context).invoke()
+    return UsersAPI(event, context).invoke()
 
 
 def values(event, context):

@@ -1,13 +1,12 @@
-service: zcx-intention
-
-custom:
-  tableName: 'users-table-${self:provider.stage}'
+service: zcx-intention-api
 
 provider:
   name: aws
   runtime: python3.6
-  stage: dev
   region: us-west-2
+  stage: dev
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -18,25 +17,46 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource:
-        - { "Fn::GetAtt": [ "UsersDynamoDBTable", "Arn" ] }
-  environment:
-    USERS_TABLE: ${self:custom.tableName}
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
 
 functions:
-  root:
-    handler: v1_api.root
+  users:
+    handler: routes.users
     events:
-      - http: 'OPTIONS /'
+      - http:
+          path: users
+          method: POST
+          cors: true
+
   values:
-    handler: v1_api.values
+    handler: routes.values
     events:
-      - http: 'ANY /values/'
-      - http: 'ANY /values/{proxy+}'
+      - http:
+          path: values
+          method: POST
+          cors: true
+      - http:
+          path: values
+          method: GET
+          cors: true
+      - http:
+          path: values/{id}
+          method: GET
+          cors: true
+      - http:
+          path: values/{id}
+          method: PUT
+          cors: true
+      - http:
+          path: values/{id}
+          method: DELETE
+          cors: true
 
 resources:
   Resources:
-    UsersDynamoDBTable:
+    IntentionDynamoDBTable:
       Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
           -
@@ -49,4 +69,4 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-        TableName: ${self:custom.tableName}
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}

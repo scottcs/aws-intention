@@ -135,7 +135,7 @@ class RestAPI:
         return self._respond('OPTIONS: {}'.format(opt_str), headers=headers)
 
     def invoke(self):
-        """Parse the lambda_api event and invoke the correct method.
+        """Parse the api_v1 event and invoke the correct method.
 
         :return: HTTP Response
         """
