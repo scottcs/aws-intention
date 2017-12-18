@@ -1,4 +1,4 @@
-service: zcx-intention-values
+service: zcx-intention
 
 custom:
   tableName: 'users-table-${self:provider.stage}'
@@ -23,11 +23,15 @@ provider:
     USERS_TABLE: ${self:custom.tableName}
 
 functions:
-  app:
-    handler: index.handler
+  root:
+    handler: v1_api.root
     events:
-      - http: ANY /
-      - http: 'ANY {proxy+}'
+      - http: 'OPTIONS /'
+  values:
+    handler: v1_api.values
+    events:
+      - http: 'ANY /values/'
+      - http: 'ANY /values/{proxy+}'
 
 resources:
   Resources:
@@ -36,11 +40,11 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: userId
+            AttributeName: email
             AttributeType: S
         KeySchema:
           -
-            AttributeName: userId
+            AttributeName: email
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
