@@ -22,5 +22,10 @@ class ValuesAPI(RestAPI):
 
     def _get(self):
         response = self.db.get(DEV_USER)
-        values = response.response.get('values', [])
-        return self._respond(None, body=values)
+        try:
+            values = response.response['Item']['values']
+            status = response.status
+        except (KeyError, TypeError):
+            values = []
+            status = 500
+        return self._respond(None, body=values, status=status)

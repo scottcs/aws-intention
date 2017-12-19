@@ -112,7 +112,10 @@ class RestAPI:
         if message:
             body['message'] = message
         if self.debug:
-            body.update(self._debugging_response_data())
+            body = {
+                'response_body': body,
+                'debug': self._debugging_response_data(),
+            }
         return {
             'statusCode': status,
             'body': json.dumps(body),
