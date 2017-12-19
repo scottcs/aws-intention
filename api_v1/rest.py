@@ -109,7 +109,8 @@ class RestAPI:
     def _respond(self, message, body=None, headers=None, status=200):
         headers = headers or {}
         body = body or {}
-        body['message'] = message
+        if message:
+            body['message'] = message
         if self.debug:
             body.update(self._debugging_response_data())
         return {

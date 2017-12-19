@@ -13,6 +13,10 @@ class UsersAPI(RestAPI):
         self.db = DBClient(os.environ['USERS_TABLE'], id_string='email', debug=self.debug)
 
     def _post(self):
-        email = self.body['email']
-        response = self.db.create(email, self.body)
+        try:
+            email = self.body['email']
+        except KeyError:
+            return self._respond('Body must contain "email".', status=400)
+        body = {}
+        response = self.db.create(email, body)
         return self._respond(response.message, status=response.status)

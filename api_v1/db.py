@@ -7,6 +7,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 Response = namedtuple('Response', ['response', 'message', 'status'])
+DEV_USER = 'scottcs+intention1@gmail.com'
 
 
 def _timestamp():
