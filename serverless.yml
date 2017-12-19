@@ -42,16 +42,8 @@ functions:
           method: GET
           cors: true
       - http:
-          path: values/{id}
-          method: GET
-          cors: true
-      - http:
-          path: values/{id}
+          path: values
           method: PUT
-          cors: true
-      - http:
-          path: values/{id}
-          method: DELETE
           cors: true
 
 resources:

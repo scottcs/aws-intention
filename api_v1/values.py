@@ -3,7 +3,7 @@ import os
 
 from .rest import RestAPI
 from .db import DBClient, DEV_USER
-from ..utils import unique_list
+from utils import unique_list
 
 
 class ValuesAPI(RestAPI):
