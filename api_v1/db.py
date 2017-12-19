@@ -38,13 +38,13 @@ class DBClient:
             'createdAt': timestamp,
             'updatedAt': timestamp,
         })
-        self.log.debug('{}: PutItem: {}'.format(self.table_name, data))
+        self.log.debug(f'{self.table_name}: PutItem: {data}')
         try:
             response = self.table.put_item(
-                Item=data, ConditionExpression='attribute_not_exists({})'.format(self.id_string))
-            return Response(response, 'Created: {}'.format(item_id), 201)
+                Item=data, ConditionExpression=f'attribute_not_exists({self.id_string})')
+            return Response(response, f'Created: {item_id}', 201)
         except ClientError as exc:
-            self.log.error('Client error: {}'.format(exc), exc_info=True)
+            self.log.error(f'Client error: {exc}', exc_info=True)
             if 'ConditionalCheckFailedException' in str(exc):
                 message = 'Resource already exists.'
             else:
@@ -61,13 +61,13 @@ class DBClient:
         :param item_id: Id of the item to delete.
         :return: Response
         """
-        self.log.debug('{}: DeleteItem: {}'.format(self.table_name, item_id))
+        self.log.debug(f'{self.table_name}: DeleteItem: {item_id}')
         response = self.table.delete_item(
             Key={
                 self.id_string: item_id,
             }
         )
-        return Response(response, 'Deleted: {}'.format(item_id), 200)
+        return Response(response, f'Deleted: {item_id}', 200)
 
     def get(self, item_id):
         """Get a single item from the table.
@@ -75,7 +75,7 @@ class DBClient:
         :param item_id: Id of the item
         :return: Response
         """
-        self.log.debug('{}: GetItem: {}'.format(self.table_name, item_id))
+        self.log.debug(f'{self.table_name}: GetItem: {item_id}')
         response = self.table.get_item(
             Key={
                 self.id_string: item_id,
@@ -88,7 +88,7 @@ class DBClient:
 
         :return: Response
         """
-        self.log.debug('{}: Scan'.format(self.table_name))
+        self.log.debug(f'{self.table_name}: Scan')
         response = self.table.scan()
         return Response(response, None, 200)
 
@@ -102,13 +102,13 @@ class DBClient:
         attr_values = {}
         updates = []
         for k, v in data.items():
-            attr_values[':{}'.format(k)] = v
-            updates.append('{0} = :{0}'.format(k))
+            attr_values[f':{k}'] = v
+            updates.append(f'{k} = :{k}')
         attr_values[':updatedAt'] = _timestamp()
-        update_expr = 'SET {}'.format(', '.join(updates))
+        update_expr = f'SET {", ".join(updates)}'
 
-        self.log.debug('{}: UpdateItem: {}  v: {}  e: {}'.format(
-            self.table_name, item_id, attr_values, update_expr))
+        self.log.debug(f'{self.table_name}: UpdateItem: {item_id}  '
+                       f'v: {attr_values}  e: {update_expr}')
         response = self.table.update_item(
             Key={
                 self.id_string: item_id,
@@ -117,4 +117,4 @@ class DBClient:
             UpdateExpression=update_expr,
             ReturnValues='ALL_NEW',
         )
-        return Response(response, 'Item updated: {}'.format(item_id), 200)
+        return Response(response, f'Item updated: {item_id}', 200)

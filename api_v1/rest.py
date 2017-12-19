@@ -122,7 +122,7 @@ class RestAPI:
         self.log.debug('OPTIONS invoked')
         options = []
         for method in HTTP_METHODS:
-            if hasattr(self, '_{}'.format(method.lower())):
+            if hasattr(self, f'_{method.lower()}'):
                 options.append(method)
         headers = {}
         if options:
@@ -132,14 +132,14 @@ class RestAPI:
             }
         else:
             opt_str = 'None'
-        return self._respond('OPTIONS: {}'.format(opt_str), headers=headers)
+        return self._respond(f'OPTIONS: {opt_str}', headers=headers)
 
     def invoke(self):
         """Parse the api_v1 event and invoke the correct method.
 
         :return: HTTP Response
         """
-        method = getattr(self, '_{}'.format(self.method.lower()), None)
+        method = getattr(self, f'_{self.method.lower()}', None)
         if method:
             return method()
-        return self._respond('{} is not implemented'.format(self.method), status=501)
+        return self._respond(f'{self.method} is not implemented', status=501)
