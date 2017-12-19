@@ -2,7 +2,7 @@
 import os
 
 from .rest import RestAPI
-from .db import DBClient, DEV_USER
+from .db import DBClient
 from utils import unique_list
 
 
@@ -16,11 +16,11 @@ class ValuesAPI(RestAPI):
     def _post(self):
         if not isinstance(self.body, list):
             return self._respond(message='Body must be a list.', status=400)
-        response = self.db.update(DEV_USER, {'values': unique_list(self.body)})
+        response = self.db.update(self.db.current_user(), {'values': unique_list(self.body)})
         return self._respond(message=response.message, status=response.status)
 
     def _get(self):
-        response = self.db.get(DEV_USER)
+        response = self.db.get(self.db.current_user())
         try:
             values = response.response['Item']['values']
             status = response.status

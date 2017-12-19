@@ -23,8 +23,16 @@ class DBClient:
         self.id_string = id_string or 'id'
         self.table = boto3.resource('dynamodb').Table(self.table_name)
         self.log = logging.getLogger('RestAPI')
+        self._user = DEV_USER
         if debug:
             self.log.setLevel(logging.DEBUG)
+
+    def current_user(self):
+        """Get the current user.
+
+        :return: The current user
+        """
+        return self._user
 
     def create(self, item_id, data):
         """Create an entry in the table.
