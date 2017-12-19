@@ -6,7 +6,8 @@ provider:
   region: us-west-2
   stage: dev
   environment:
-    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    USERS_TABLE: ${self:service}-users-${opt:stage, self:provider.stage}
+    GOALS_TABLE: ${self:service}-goals-${opt:stage, self:provider.stage}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -17,7 +18,8 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource:
-        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}"
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.GOALS_TABLE}"
 
 functions:
   users:
@@ -54,7 +56,7 @@ functions:
 
 resources:
   Resources:
-    IntentionDynamoDBTable:
+    IntentionUsersDynamoDBTable:
       Type: 'AWS::DynamoDB::Table'
       DeletionPolicy: Retain
       Properties:
@@ -69,4 +71,20 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        TableName: ${self:provider.environment.USERS_TABLE}
+    IntentionGoalsDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.GOALS_TABLE}
