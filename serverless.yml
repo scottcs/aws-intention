@@ -41,10 +41,6 @@ functions:
           path: values
           method: GET
           cors: true
-      - http:
-          path: values
-          method: PUT
-          cors: true
 
 resources:
   Resources:
