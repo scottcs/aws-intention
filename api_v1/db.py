@@ -100,20 +100,23 @@ class DBClient:
         :param data: Item data for the row
         :return: Response
         """
+        attr_names = {}
         attr_values = {}
         updates = []
+        data['updatedAt'] = _timestamp()
         for k, v in data.items():
+            attr_names[f'#{k}'] = k
             attr_values[f':{k}'] = v
-            updates.append(f'{k} = :{k}')
-        attr_values[':updatedAt'] = _timestamp()
+            updates.append(f'#{k} = :{k}')
         update_expr = f'SET {", ".join(updates)}'
 
         self.log.debug(f'{self.table_name}: UpdateItem: {item_id}  '
-                       f'v: {attr_values}  e: {update_expr}')
+                       f'n: {attr_names}  v: {attr_values}  e: {update_expr}')
         response = self.table.update_item(
             Key={
                 self.id_string: item_id,
             },
+            ExpressionAttributeNames=attr_names,
             ExpressionAttributeValues=attr_values,
             UpdateExpression=update_expr,
             ReturnValues='ALL_NEW',

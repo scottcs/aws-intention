@@ -14,7 +14,7 @@ class ValuesAPI(RestAPI):
 
     def _post(self):
         try:
-            body = {'values': self.body['values']}
+            body = {'values': self.body}
         except KeyError:
             return self._respond(message='Body must specify "values" list.', status=400)
         response = self.db.update(DEV_USER, body)
