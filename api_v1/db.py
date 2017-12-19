@@ -1,7 +1,6 @@
 """DynamoDB Interface class."""
 from collections import namedtuple
 import logging
-import os
 import time
 
 import boto3
@@ -18,8 +17,8 @@ def _timestamp():
 class DBClient:
     """DynamoDB client class."""
 
-    def __init__(self, table_name=None, id_string=None, debug=False):
-        self.table_name = table_name or os.environ['DYNAMODB_TABLE']
+    def __init__(self, table_name, id_string=None, debug=False):
+        self.table_name = table_name
         self.id_string = id_string or 'id'
         self.table = boto3.resource('dynamodb').Table(self.table_name)
         self.log = logging.getLogger('RestAPI')
@@ -51,8 +50,9 @@ class DBClient:
             else:
                 message = str(exc)
             try:
-                return Response(None, message, int(exc.response['ResponseMetadata']['HTTPStatusCode']))
-            except KeyError:
+                return Response(
+                    None, message, int(exc.response['ResponseMetadata']['HTTPStatusCode']))
+            except (KeyError, AttributeError):
                 return Response(None, str(exc), 500)
 
     def delete(self, item_id):

@@ -1,4 +1,6 @@
 """REST Users API."""
+import os
+
 from .rest import RestAPI
 from .db import DBClient
 
@@ -8,7 +10,7 @@ class UsersAPI(RestAPI):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.db = DBClient(id_string='email', debug=self.debug)
+        self.db = DBClient(os.environ['USERS_TABLE'], id_string='email', debug=self.debug)
 
     def _post(self):
         email = self.body['email']
