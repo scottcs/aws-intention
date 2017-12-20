@@ -32,8 +32,8 @@ class RolesAPI(RestAPI):
     @staticmethod
     def _is_value_defined(value, response):
         try:
-            defined_values = response.response['Item']['values']
-        except (KeyError, TypeError):
+            defined_values = response.items[0]['values']
+        except (KeyError, TypeError, IndexError):
             defined_values = []
         return value in [v['name'] for v in defined_values]
 
@@ -44,8 +44,8 @@ class RolesAPI(RestAPI):
             return self._respond(message=str(exc), status=400)
         response = self.db.get(self.db.current_user())
         try:
-            roles = response.response['Item']['roles']
-        except (KeyError, TypeError):
+            roles = response.items[0]['roles']
+        except (KeyError, TypeError, IndexError):
             roles = []
         if self.body['name'] in [r['name'] for r in roles]:
             return self._respond(message='Resource already exists', status=400)
@@ -67,8 +67,8 @@ class RolesAPI(RestAPI):
             return self._respond(message=str(exc), status=400)
         response = self.db.get(self.db.current_user())
         try:
-            roles = response.response['Item']['roles']
-        except (KeyError, TypeError):
+            roles = response.items[0]['roles']
+        except (KeyError, TypeError, IndexError):
             return self._respond(message='Not Found', status=404)
         if self.path_parameters['name'] not in [r['name'] for r in roles]:
             return self._respond(message='Not Found', status=404)
@@ -88,8 +88,8 @@ class RolesAPI(RestAPI):
     def _delete(self):
         response = self.db.get(self.db.current_user())
         try:
-            roles = response.response['Item']['roles']
-        except (KeyError, TypeError):
+            roles = response.items[0]['roles']
+        except (KeyError, TypeError, IndexError):
             return self._respond(message='Not Found', status=404)
         if self.path_parameters['name'] not in [r['name'] for r in roles]:
             return self._respond(message='Not Found', status=404)
@@ -106,8 +106,8 @@ class RolesAPI(RestAPI):
     def _get(self):
         response = self.db.get(self.db.current_user())
         try:
-            roles = response.response['Item']['roles']
-        except (KeyError, TypeError):
+            roles = response.items[0]['roles']
+        except (KeyError, TypeError, IndexError):
             return self._respond(message='Not Found', status=404)
         if 'name' in self.path_parameters:
             for role in roles:

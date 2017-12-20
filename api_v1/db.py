@@ -1,18 +1,49 @@
 """DynamoDB Interface class."""
-from collections import namedtuple
 import logging
 import time
 
 import boto3
 from botocore.exceptions import ClientError
 
-Response = namedtuple('Response', ['response', 'message', 'status'])
 DEV_USER = 'scottcs+intention1@gmail.com'
+
+
+def response_status(response):
+    """Status code from DynamoDB response."""
+    try:
+        return int(response['ResponseMetadata']['HTTPStatusCode'])
+    except (TypeError, KeyError):
+        return None
 
 
 def _timestamp():
     """Get a timestamp of the current time."""
     return int(time.time() * 1000)
+
+
+class DBResponse:
+    """Represent a response from a DB call."""
+    def __init__(self, response=None, body=None, status=200):
+        self.response = response
+        self.body = body or {}
+        self.status = status
+
+    @property
+    def message(self):
+        """Message in body."""
+        return self.body.get('message', '')
+
+    @property
+    def items(self):
+        """Get response items."""
+        try:
+            items = self.response['Items']
+        except (TypeError, KeyError):
+            try:
+                items = [self.response['Item']]
+            except (TypeError, KeyError):
+                items = []
+        return items
 
 
 class DBClient:
@@ -39,7 +70,7 @@ class DBClient:
 
         :param item_id: Unique id for the table row
         :param data: Item data for the row
-        :return: Response
+        :return: DBResponse
         """
         timestamp = _timestamp()
         data.update({
@@ -51,7 +82,9 @@ class DBClient:
         try:
             response = self.table.put_item(
                 Item=data, ConditionExpression=f'attribute_not_exists({self.id_string})')
-            return Response(response, f'Created: {item_id}', 201)
+            return DBResponse(response=response,
+                              body={self.id_string: item_id},
+                              status=201)
         except ClientError as exc:
             self.log.error(f'Client error: {exc}', exc_info=True)
             if 'ConditionalCheckFailedException' in str(exc):
@@ -59,16 +92,15 @@ class DBClient:
             else:
                 message = str(exc)
             try:
-                return Response(
-                    None, message, int(exc.response['ResponseMetadata']['HTTPStatusCode']))
+                return DBResponse(body={'message': message}, status=response_status(exc.response))
             except (KeyError, AttributeError):
-                return Response(None, str(exc), 500)
+                return DBResponse(body={'message': str(exc)}, status=500)
 
     def delete(self, item_id):
         """Delete a row from the table.
 
         :param item_id: Id of the item to delete.
-        :return: Response
+        :return: DBResponse
         """
         self.log.debug(f'{self.table_name}: DeleteItem: {item_id}')
         response = self.table.delete_item(
@@ -76,13 +108,15 @@ class DBClient:
                 self.id_string: item_id,
             }
         )
-        return Response(response, f'Deleted: {item_id}', 200)
+        return DBResponse(response=response,
+                          body={'message': f'Deleted: {item_id}',
+                                self.id_string: item_id})
 
     def get(self, item_id):
         """Get a single item from the table.
 
         :param item_id: Id of the item
-        :return: Response
+        :return: DBResponse
         """
         self.log.debug(f'{self.table_name}: GetItem: {item_id}')
         response = self.table.get_item(
@@ -90,23 +124,23 @@ class DBClient:
                 self.id_string: item_id,
             }
         )
-        return Response(response, None, 200)
+        return DBResponse(response=response)
 
     def get_all(self):
         """Get all items from the table.
 
-        :return: Response
+        :return: DBResponse
         """
         self.log.debug(f'{self.table_name}: Scan')
         response = self.table.scan()
-        return Response(response, None, 200)
+        return DBResponse(response=response)
 
     def update(self, item_id, data):
         """Update an item in the table.
 
         :param item_id: Unique id for the table row
         :param data: Item data for the row
-        :return: Response
+        :return: DBResponse
         """
         attr_names = {}
         attr_values = {}
@@ -129,4 +163,6 @@ class DBClient:
             UpdateExpression=update_expr,
             ReturnValues='ALL_NEW',
         )
-        return Response(response, f'Item updated: {item_id}', 200)
+        return DBResponse(response=response,
+                          body={'message': f'Item updated: {item_id}',
+                                self.id_string: item_id})

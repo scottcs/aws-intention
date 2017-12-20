@@ -29,8 +29,8 @@ class GoalsAPI(RestAPI):
     def _is_role_defined(self, role):
         response = self.user_db.get(self.user_db.current_user())
         try:
-            defined_roles = response.response['Item']['roles']
-        except (KeyError, TypeError):
+            defined_roles = response.items[0]['roles']
+        except (KeyError, TypeError, IndexError):
             defined_roles = []
         return role in [r['name'] for r in defined_roles]
 
@@ -62,14 +62,10 @@ class GoalsAPI(RestAPI):
         if 'id' in self.path_parameters:
             response = self.db.get(self.path_parameters['id'])
             try:
-                goal = response.response['Item']
-            except (KeyError, TypeError):
+                goal = response.items[0]
+            except IndexError:
                 return self._respond(message='Not Found', status=404)
             return self._respond(None, body=goal)
         else:
             response = self.db.get_all()
-            try:
-                goals = response.response['Items']
-            except (KeyError, TypeError):
-                goals = []
-            return self._respond(None, body=goals)
+            return self._respond(None, body=response.items)

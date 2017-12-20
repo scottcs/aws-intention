@@ -3,7 +3,6 @@ import os
 
 from .rest import RestAPI
 from .db import DBClient
-from utils import unique_list
 
 
 class ValuesAPI(RestAPI):
@@ -20,8 +19,8 @@ class ValuesAPI(RestAPI):
             return self._respond(message='"name" expected in body', status=400)
         response = self.db.get(self.db.current_user())
         try:
-            values = response.response['Item']['values']
-        except (KeyError, TypeError):
+            values = response.items[0]['values']
+        except (KeyError, TypeError, IndexError):
             values = []
         if name in [v['name'] for v in values]:
             return self._respond(message='Resource already exists', status=400)
@@ -32,8 +31,8 @@ class ValuesAPI(RestAPI):
     def _delete(self):
         response = self.db.get(self.db.current_user())
         try:
-            values = response.response['Item']['values']
-        except (KeyError, TypeError):
+            values = response.items[0]['values']
+        except (KeyError, TypeError, IndexError):
             return self._respond(message='Not Found', status=404)
         if self.path_parameters['name'] not in [v['name'] for v in values]:
             return self._respond(message='Not Found', status=404)
@@ -50,10 +49,10 @@ class ValuesAPI(RestAPI):
     def _get(self):
         response = self.db.get(self.db.current_user())
         try:
-            values = response.response['Item']['values']
+            values = response.items[0]['values']
             status = response.status
             message = None
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
             values = []
             status = 404
             message = 'Not Found'
