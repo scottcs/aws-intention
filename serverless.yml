@@ -41,6 +41,10 @@ functions:
           path: values
           method: GET
           cors: true
+      - http:
+          path: values/{name}
+          method: DELETE
+          cors: true
 
 resources:
   Resources:

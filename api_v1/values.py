@@ -14,9 +14,34 @@ class ValuesAPI(RestAPI):
         self.db = DBClient(os.environ['USERS_TABLE'], id_string='email', debug=self.debug)
 
     def _post(self):
-        if not isinstance(self.body, list):
-            return self._respond(message='Body must be a list.', status=400)
-        response = self.db.update(self.db.current_user(), {'values': unique_list(self.body)})
+        try:
+            name = self.body['name']
+        except (KeyError, TypeError):
+            return self._respond(message='"name" expected in body', status=400)
+        response = self.db.get(self.db.current_user())
+        try:
+            values = response.response['Item']['values']
+        except (KeyError, TypeError):
+            values = []
+        if name in [v['name'] for v in values]:
+            return self._respond(message='Resource already exists', status=400)
+        values.append({'name': name})
+        response = self.db.update(self.db.current_user(), {'values': values})
+        return self._respond(message=response.message, status=response.status)
+
+    def _delete(self):
+        response = self.db.get(self.db.current_user())
+        try:
+            values = response.response['Item']['values']
+        except (KeyError, TypeError):
+            return self._respond(message='Not Found', status=404)
+        if self.path_parameters['name'] not in [v['name'] for v in values]:
+            return self._respond(message='Not Found', status=404)
+        new_values = []
+        for value in values:
+            if self.path_parameters['name'] != value['name']:
+                new_values.append(value)
+        response = self.db.update(self.db.current_user(), {'values': new_values})
         return self._respond(message=response.message, status=response.status)
 
     def _get(self):
