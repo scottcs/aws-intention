@@ -65,13 +65,11 @@ class GoalsAPI(RestAPI):
                 goal = response.response['Item']
             except (KeyError, TypeError):
                 return self._respond(message='Not Found', status=404)
-            self.log.debug(goal)
             return self._respond(None, body=goal)
         else:
             response = self.db.get_all()
             try:
-                goals = response.response['Item']
+                goals = response.response['Items']
             except (KeyError, TypeError):
                 goals = []
-            self.log.debug(goals)
             return self._respond(None, body=goals)
