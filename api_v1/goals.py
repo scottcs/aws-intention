@@ -2,8 +2,8 @@
 import os
 import uuid
 
-from .rest import RestAPI, ValidationException
 from .db import DBClient
+from .rest import RestAPI, ValidationException
 
 
 class GoalsAPI(RestAPI):
@@ -57,3 +57,21 @@ class GoalsAPI(RestAPI):
         goal_id = str(uuid.uuid4())
         response = self.db.create(goal_id, self._make_body())
         return self._respond(response.message, status=response.status)
+
+    def _get(self):
+        if 'id' in self.path_parameters:
+            response = self.db.get(self.path_parameters['id'])
+            try:
+                goal = response.response['Item']
+            except (KeyError, TypeError):
+                return self._respond(message='Not Found', status=404)
+            self.log.debug(goal)
+            return self._respond(None, body=goal)
+        else:
+            response = self.db.get_all()
+            try:
+                goals = response.response['Item']
+            except (KeyError, TypeError):
+                goals = []
+            self.log.debug(goals)
+            return self._respond(None, body=goals)

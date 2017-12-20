@@ -2,6 +2,8 @@
 import json
 import logging
 
+from .decimal_encoder import DecimalEncoder
+
 
 HTTP_METHODS = (
     'GET',
@@ -122,7 +124,7 @@ class RestAPI:
             }
         return {
             'statusCode': status,
-            'body': json.dumps(body),
+            'body': json.dumps(body, cls=DecimalEncoder),
             'headers': headers,
         }
 
