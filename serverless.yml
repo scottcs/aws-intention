@@ -59,7 +59,7 @@ functions:
           cors: true
       - http:
           path: roles/{name}
-          method: DELETE
+          method: GET
           cors: true
       - http:
           path: roles/{name}
@@ -67,7 +67,31 @@ functions:
           cors: true
       - http:
           path: roles/{name}
+          method: DELETE
+          cors: true
+
+  goals:
+    handler: routes.goals
+    events:
+      - http:
+          path: goals
+          method: POST
+          cors: true
+      - http:
+          path: goals
           method: GET
+          cors: true
+      - http:
+          path: goals/{id}
+          method: GET
+          cors: true
+      - http:
+          path: goals/{id}
+          method: PUT
+          cors: true
+      - http:
+          path: goals/{id}
+          method: DELETE
           cors: true
 
 resources:
