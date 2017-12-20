@@ -12,7 +12,7 @@ class GoalsAPI(RestAPI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.db = DBClient(os.environ['GOALS_TABLE'], debug=self.debug)
-        self.user_db = DBClient(os.environ['USERS_TABLE'], debug=self.debug)
+        self.user_db = DBClient(os.environ['USERS_TABLE'], id_string='email', debug=self.debug)
 
     def _validate_goal(self, goal, update=False):
         if not isinstance(goal, dict):
