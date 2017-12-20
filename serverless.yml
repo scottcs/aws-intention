@@ -46,6 +46,30 @@ functions:
           method: DELETE
           cors: true
 
+  roles:
+    handler: routes.roles
+    events:
+      - http:
+          path: roles
+          method: POST
+          cors: true
+      - http:
+          path: roles
+          method: GET
+          cors: true
+      - http:
+          path: roles/{name}
+          method: DELETE
+          cors: true
+      - http:
+          path: roles/{name}
+          method: PUT
+          cors: true
+      - http:
+          path: roles/{name}
+          method: GET
+          cors: true
+
 resources:
   Resources:
     IntentionUsersDynamoDBTable:
