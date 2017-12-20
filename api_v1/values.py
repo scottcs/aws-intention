@@ -42,7 +42,10 @@ class ValuesAPI(RestAPI):
             if self.path_parameters['name'] != value['name']:
                 new_values.append(value)
         response = self.db.update(self.db.current_user(), {'values': new_values})
-        return self._respond(message=response.message, status=response.status)
+        message = response.message
+        if 'Item updated' in message:
+            message = 'Resource removed'
+        return self._respond(message=message, status=response.status)
 
     def _get(self):
         response = self.db.get(self.db.current_user())

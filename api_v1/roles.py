@@ -65,16 +65,22 @@ class RolesAPI(RestAPI):
             if self.path_parameters['name'] != role['name']:
                 new_roles.append(role)
         response = self.db.update(self.db.current_user(), {'roles': new_roles})
-        return self._respond(message=response.message, status=response.status)
+        message = response.message
+        if 'Item updated' in message:
+            message = 'Resource removed'
+        return self._respond(message=message, status=response.status)
+
+    # TODO: _put()
 
     def _get(self):
         response = self.db.get(self.db.current_user())
         try:
             roles = response.response['Item']['roles']
-            status = response.status
-            message = None
         except (KeyError, TypeError):
-            roles = []
-            status = 404
-            message = 'Not Found'
-        return self._respond(message, body=roles, status=status)
+            return self._respond(message='Not Found', status=404)
+        if 'name' in self.path_parameters:
+            for role in roles:
+                if role['name'] == self.path_parameters['name']:
+                    return self._respond(None, body=role)
+            return self._respond(message='Not Found', status=404)
+        return self._respond(None, body=roles)
