@@ -1,7 +1,7 @@
 """REST Roles API."""
 import os
 
-from .rest import RestAPI
+from .rest import RestAPI, ValidationException
 from .db import DBClient
 from utils import unique_list
 
@@ -13,42 +13,75 @@ class RolesAPI(RestAPI):
         super().__init__(*args, **kwargs)
         self.db = DBClient(os.environ['USERS_TABLE'], id_string='email', debug=self.debug)
 
+    @staticmethod
+    def _validate_role(role):
+        if not isinstance(role, dict):
+            raise ValidationException('Role is expected to be a dict')
+        if 'name' not in role:
+            raise ValidationException('"name" expected in body')
+        if 'values' not in role:
+            raise ValidationException('"values" expected in body')
+        if not isinstance(role['values'], list):
+            raise ValidationException('"values" must be a list.')
+        try:
+            if not isinstance(role['aliases'], list):
+                raise ValidationException('"aliases" must be a list.')
+        except KeyError:
+            pass
+
+    @staticmethod
+    def _is_value_defined(value, response):
+        try:
+            defined_values = response.response['Item']['values']
+        except (KeyError, TypeError):
+            defined_values = []
+        return value in [v['name'] for v in defined_values]
+
     def _post(self):
         try:
-            name = self.body['name']
-        except (KeyError, TypeError):
-            return self._respond(message='"name" expected in body', status=400)
-        try:
-            values = self.body['values']
-            if not isinstance(values, list):
-                return self._respond(message='"values" must be a list.', status=400)
-        except (KeyError, TypeError):
-            return self._respond(message='"values" expected in body', status=400)
-        try:
-            aliases = self.body['aliases']
-            if not isinstance(aliases, list):
-                return self._respond(message='"aliases" must be a list.', status=400)
-        except (KeyError, TypeError):
-            aliases = []
+            self._validate_role(self.body)
+        except ValidationException as exc:
+            return self._respond(message=str(exc), status=400)
         response = self.db.get(self.db.current_user())
         try:
             roles = response.response['Item']['roles']
         except (KeyError, TypeError):
             roles = []
-        if name in [r['name'] for r in roles]:
+        if self.body['name'] in [r['name'] for r in roles]:
             return self._respond(message='Resource already exists', status=400)
-        try:
-            defined_values = response.response['Item']['values']
-        except (KeyError, TypeError):
-            defined_values = []
-        for value in values:
-            if value not in [v['name'] for v in defined_values]:
+        for value in self.body['values']:
+            if not self._is_value_defined(value, response):
                 return self._respond(message=f'Undefined value "{value}"', status=400)
         roles.append({
-            'name': name,
-            'values': values,
-            'aliases': unique_list(aliases)
+            'name': self.body['name'],
+            'values': self.body['values'],
+            'aliases': unique_list(self.body.get('aliases', [])),
         })
+        response = self.db.update(self.db.current_user(), {'roles': roles})
+        return self._respond(message=response.message, status=response.status)
+
+    def _put(self):
+        try:
+            self._validate_role(self.body)
+        except ValidationException as exc:
+            return self._respond(message=str(exc), status=400)
+        response = self.db.get(self.db.current_user())
+        try:
+            roles = response.response['Item']['roles']
+        except (KeyError, TypeError):
+            return self._respond(message='Not Found', status=404)
+        if self.path_parameters['name'] not in [r['name'] for r in roles]:
+            return self._respond(message='Not Found', status=404)
+        for value in self.body['values']:
+            if not self._is_value_defined(value, response):
+                return self._respond(message=f'Undefined value "{value}"', status=400)
+        for role in roles:
+            if role['name'] == self.path_parameters['name']:
+                role.update({
+                    'name': self.body['name'],
+                    'values': self.body['values'],
+                    'aliases': unique_list(self.body.get('aliases', [])),
+                })
         response = self.db.update(self.db.current_user(), {'roles': roles})
         return self._respond(message=response.message, status=response.status)
 
@@ -69,8 +102,6 @@ class RolesAPI(RestAPI):
         if 'Item updated' in message:
             message = 'Resource removed'
         return self._respond(message=message, status=response.status)
-
-    # TODO: _put()
 
     def _get(self):
         response = self.db.get(self.db.current_user())

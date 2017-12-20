@@ -22,6 +22,10 @@ HTTP_METHODS = (
 )
 
 
+class ValidationException(Exception):
+    """API Validation failure."""
+
+
 class RestAPI:
     """HTTP REST API handler.
 
